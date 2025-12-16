@@ -1,18 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Clock, TrendingDown, Eye, Flame, Heart } from 'lucide-react'
+import { MapPin, Clock, TrendingDown, Eye, Flame } from 'lucide-react'
 
 const ListingCard = ({ listing }) => {
   const { vehicle, pricing, inventory, dealerLocation, dealHeatScore, views } = listing
-  const [isFavorited, setIsFavorited] = useState(false)
-
-  const handleFavoriteClick = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsFavorited(!isFavorited)
-    // In production, this would call context to update favorites
-    console.log('Favorited:', listing.id)
-  }
 
   const getDealHeatColor = (score) => {
     if (score >= 90) return 'text-red-600'
@@ -32,28 +23,6 @@ const ListingCard = ({ listing }) => {
     <Link to={`/deal/${listing.id}`} className="card group">
       {/* Image Placeholder */}
       <div className="relative bg-gradient-to-br from-gray-200 to-gray-300 h-48 flex items-center justify-center">
-        {/* Favorite Heart Button - Left side */}
-        <button
-          onClick={handleFavoriteClick}
-          className={`absolute top-3 right-14 p-2 rounded-full transition-all z-10 ${
-            isFavorited 
-              ? 'bg-red-500 text-white' 
-              : 'bg-white/90 text-gray-600 hover:bg-white'
-          }`}
-        >
-          <Heart 
-            className={`h-5 w-5 ${isFavorited ? 'fill-current' : ''}`}
-          />
-        </button>
-
-        {/* Deal Heat Score - Right side */}
-        <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-orange-100 flex items-center space-x-1">
-          <Flame className={`h-4 w-4 ${getDealHeatColor(dealHeatScore)}`} />
-          <span className={`text-sm font-semibold ${getDealHeatColor(dealHeatScore)}`}>
-            {dealHeatScore}
-          </span>
-        </div>
-
         <div className="text-center">
           <div className="text-4xl font-bold text-gray-400">
             {vehicle.make}
@@ -61,6 +30,14 @@ const ListingCard = ({ listing }) => {
           <div className="text-xl text-gray-500">
             {vehicle.model}
           </div>
+        </div>
+        
+        {/* Deal Heat Badge */}
+        <div className={`absolute top-3 right-3 ${getDealHeatBg(dealHeatScore)} px-3 py-1 rounded-full flex items-center space-x-1`}>
+          <Flame className={`h-4 w-4 ${getDealHeatColor(dealHeatScore)}`} />
+          <span className={`text-sm font-bold ${getDealHeatColor(dealHeatScore)}`}>
+            {dealHeatScore}
+          </span>
         </div>
 
         {/* Condition Badge */}

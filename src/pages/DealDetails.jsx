@@ -1,290 +1,242 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import {
-  MapPin,
-  Clock,
-  TrendingDown,
-  Eye,
-  Unlock,
-  ArrowLeft,
-  CheckCircle,
-  Phone,
-  Mail,
-  AlertCircle
-} from 'lucide-react';
+import React, { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useApp } from '../context/AppContext'
+import { 
+  MapPin, Clock, TrendingDown, Eye, Flame, Lock, Unlock, 
+  Phone, Mail, CheckCircle, ArrowLeft, AlertCircle 
+} from 'lucide-react'
 
 const DealDetails = () => {
-  const { id } = useParams();
-  const { getListingById, unlockListing, isListingUnlocked } = useApp();
-  const listing = getListingById(id);
-  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const { id } = useParams()
+  const { getListingById, getDealerById, unlockListing, isListingUnlocked } = useApp()
+  const [showUnlockModal, setShowUnlockModal] = useState(false)
+  
+  const listing = getListingById(id)
 
   if (!listing) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Listing Not Found
-          </h2>
-          <Link to="/browse" className="text-blue-600 hover:text-blue-700">
-            Back to Browse
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Deal Not Found</h2>
+          <p className="text-gray-600 mb-4">This listing may have been removed or is no longer available.</p>
+          <Link to="/browse" className="btn-primary">
+            Browse Other Deals
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
-  const isUnlocked = isListingUnlocked(listing.id);
+  const { vehicle, pricing, inventory, dealerLocation, dealHeatScore, views, features, dealerId } = listing
+  const isUnlocked = isListingUnlocked(id)
+  const dealer = getDealerById(dealerId)
 
-  const handleUnlock = (plan) => {
-    unlockListing(listing.id);
-    setShowUnlockModal(false);
-    alert(`${plan} purchased! You now have access to unlock all deals.`);
-  };
+  const handleUnlock = () => {
+    // In production, this would process payment via Stripe
+    unlockListing(id)
+    setShowUnlockModal(false)
+  }
+
+  const getDealHeatColor = (score) => {
+    if (score >= 90) return 'text-red-600'
+    if (score >= 80) return 'text-orange-600'
+    if (score >= 70) return 'text-yellow-600'
+    return 'text-blue-600'
+  }
+
+  const getDealHeatBg = (score) => {
+    if (score >= 90) return 'bg-red-100'
+    if (score >= 80) return 'bg-orange-100'
+    if (score >= 70) return 'bg-yellow-100'
+    return 'bg-blue-100'
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link
-          to="/browse"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6"
-        >
+        {/* Back Button */}
+        <Link to="/browse" className="inline-flex items-center text-primary-600 hover:text-primary-700 mb-6">
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back to Browse
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content - Left Side */}
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Image */}
-            <div className="card overflow-hidden">
-              <div className="relative">
-                <div className="bg-gradient-to-br from-gray-300 to-gray-400 h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-6xl font-bold text-gray-500">
-                      {listing.vehicle.make}
-                    </div>
-                    <div className="text-3xl text-gray-600">
-                      {listing.vehicle.model}
-                    </div>
-                  </div>
+            <div className="card">
+              <div className="relative bg-gradient-to-br from-gray-200 to-gray-300 h-96 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl font-bold text-gray-400">{vehicle.make}</div>
+                  <div className="text-3xl text-gray-500">{vehicle.model}</div>
                 </div>
                 
-                {/* Condition Badge */}
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-900 uppercase">
-                    {listing.vehicle.condition}
-                  </span>
-                </div>
-
                 {/* Deal Heat Badge */}
-                <div className="absolute top-4 right-4">
-                  <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-semibold flex items-center">
-                    🔥 {listing.dealHeatScore}
+                <div className={`absolute top-4 right-4 ${getDealHeatBg(dealHeatScore)} px-4 py-2 rounded-full flex items-center space-x-2`}>
+                  <Flame className={`h-5 w-5 ${getDealHeatColor(dealHeatScore)}`} />
+                  <span className={`text-lg font-bold ${getDealHeatColor(dealHeatScore)}`}>
+                    {dealHeatScore}
+                  </span>
+                </div>
+
+                {/* Condition Badge */}
+                <div className="absolute top-4 left-4 bg-white px-4 py-2 rounded-full">
+                  <span className="text-sm font-semibold text-gray-700 uppercase">
+                    {vehicle.condition}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Title & Subtitle */}
-            <div>
+            {/* Vehicle Info */}
+            <div className="card p-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {listing.vehicle.year} {listing.vehicle.make} {listing.vehicle.model}
+                {vehicle.year} {vehicle.make} {vehicle.model}
               </h1>
-              <p className="text-xl text-gray-600">{listing.vehicle.trim}</p>
-            </div>
+              <p className="text-xl text-gray-600 mb-6">{vehicle.trim}</p>
 
-            {/* Vehicle Details Grid */}
-            <div className="card">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Exterior</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.exteriorColor}
-                  </p>
+                  <p className="text-sm text-gray-500">Exterior</p>
+                  <p className="font-semibold text-gray-900">{vehicle.exteriorColor}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Interior</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.interiorColor}
-                  </p>
+                  <p className="text-sm text-gray-500">Interior</p>
+                  <p className="font-semibold text-gray-900">{vehicle.interiorColor}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Mileage</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.mileage.toLocaleString()} mi
-                  </p>
+                  <p className="text-sm text-gray-500">Mileage</p>
+                  <p className="font-semibold text-gray-900">{vehicle.mileage.toLocaleString()} mi</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Body Style</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.bodyStyle}
-                  </p>
+                  <p className="text-sm text-gray-500">Body Style</p>
+                  <p className="font-semibold text-gray-900">{vehicle.bodyStyle}</p>
                 </div>
               </div>
-            </div>
 
-            {/* Key Features */}
-            {listing.features && listing.features.length > 0 && (
-              <div className="card">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Key Features
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {listing.features.map((feature, index) => (
-                    <div key={index} className="flex items-center text-gray-700">
-                      <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
-                      {feature}
-                    </div>
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h3>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-accent-600 mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
-            )}
+            </div>
 
-            {/* Vehicle Identification */}
-            <div className="card">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Vehicle Identification
-              </h2>
-              <div className="space-y-4">
+            {/* VIN Info */}
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Identification</h3>
+              <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Stock Number</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.inventory.stockNumber}
-                  </p>
+                  <p className="text-sm text-gray-500">Stock Number</p>
+                  <p className="font-semibold text-gray-900">{inventory.stockNumber}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">VIN</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.vin}
+                  <p className="text-sm text-gray-500">VIN</p>
+                  <p className="font-mono text-gray-900">
+                    {isUnlocked ? listing.vehicle.vin : `${vehicle.vin.substring(0, 10)}...${vehicle.vinLast4}`}
+                    {!isUnlocked && <span className="text-xs text-gray-500 ml-2">(Unlock to reveal full VIN)</span>}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Sidebar */}
+          {/* Sidebar */}
           <div className="space-y-6">
             {/* Pricing Card */}
-            <div className="card">
-              <div className="text-right mb-4">
-                <p className="text-sm text-gray-500 line-through mb-1">
-                  ${listing.pricing.msrp.toLocaleString()}
-                </p>
-                <p className="text-4xl font-bold text-gray-900 mb-2">
-                  ${listing.pricing.sellingPrice.toLocaleString()}
-                </p>
-                <p className="text-lg text-green-600 font-semibold flex items-center justify-end">
-                  <TrendingDown className="h-5 w-5 mr-1" />
-                  Save ${listing.pricing.discount.toLocaleString()} ({listing.pricing.discountPercent.toFixed(1)}%)
-                </p>
+            <div className="card p-6">
+              <div className="text-center mb-4">
+                <p className="text-sm text-gray-500 line-through">${pricing.msrp.toLocaleString()}</p>
+                <p className="text-4xl font-bold text-gray-900 my-2">${pricing.sellingPrice.toLocaleString()}</p>
+                <div className="flex items-center justify-center text-accent-600 font-semibold text-xl">
+                  <TrendingDown className="h-6 w-6 mr-1" />
+                  <span>Save ${pricing.discount.toLocaleString()} ({pricing.discountPercent.toFixed(1)}%)</span>
+                </div>
               </div>
 
-              {/* Unlocked State */}
-              {isUnlocked ? (
-                <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
-                  <div className="flex items-center text-green-700 font-semibold mb-3">
+              {/* Dealer Contact */}
+              {isUnlocked && dealer ? (
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="flex items-center text-accent-600 mb-4">
                     <Unlock className="h-5 w-5 mr-2" />
-                    Dealer Contact Unlocked
+                    <span className="font-semibold">Dealer Contact Unlocked</span>
                   </div>
-                  
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Dealership</p>
-                      <p className="font-semibold text-gray-900">{listing.dealerName}</p>
+                      <p className="text-sm text-gray-500">Dealership</p>
+                      <p className="font-semibold text-gray-900">{dealer.businessName}</p>
                     </div>
-                    
-                    <div className="flex items-center text-gray-900">
-                      <Phone className="h-4 w-4 mr-2 text-gray-600" />
-                      <a 
-                        href={`tel:${listing.dealerPhone}`}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        {listing.dealerPhone}
+                    <div className="flex items-center text-gray-700">
+                      <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                      <a href={`tel:${dealer.phone}`} className="hover:text-primary-600">
+                        {dealer.phone}
                       </a>
                     </div>
-                    
-                    <div className="flex items-center text-gray-900">
-                      <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                      <a 
-                        href={`mailto:${listing.dealerEmail}`}
-                        className="text-blue-600 hover:text-blue-700 break-all"
-                      >
-                        {listing.dealerEmail}
+                    <div className="flex items-center text-gray-700">
+                      <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                      <a href={`mailto:${dealer.email}`} className="hover:text-primary-600 break-all">
+                        {dealer.email}
                       </a>
                     </div>
                   </div>
-
-                  <button className="w-full mt-4 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                  <button className="w-full mt-4 btn-primary">
                     Contact Dealer
                   </button>
                 </div>
               ) : (
-                <button
+                <button 
                   onClick={() => setShowUnlockModal(true)}
-                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center"
+                  className="w-full mt-4 btn-accent flex items-center justify-center"
                 >
-                  <Unlock className="h-5 w-5 mr-2" />
-                  Unlock This Deal
+                  <Lock className="h-5 w-5 mr-2" />
+                  Unlock Dealer Contact - $20
                 </button>
               )}
             </div>
 
-            {/* Deal Stats */}
-            <div className="card">
+            {/* Stats Card */}
+            <div className="card p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Deal Stats</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <MapPin className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+              <div className="space-y-3">
+                <div className="flex items-center text-gray-700">
+                  <MapPin className="h-5 w-5 mr-3 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-500">Location</p>
-                    <p className="font-semibold text-gray-900">{listing.dealerLocation}</p>
+                    <p className="font-semibold">{dealerLocation}</p>
                   </div>
                 </div>
-
-                <div className="flex items-start">
-                  <Clock className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                <div className="flex items-center text-gray-700">
+                  <Clock className="h-5 w-5 mr-3 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-500">Days in Stock</p>
-                    <p className="font-semibold text-gray-900">{listing.inventory.daysInStock} days</p>
+                    <p className="font-semibold">{inventory.daysInStock} days</p>
                   </div>
                 </div>
-
-                <div className="flex items-start">
-                  <Eye className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                <div className="flex items-center text-gray-700">
+                  <Eye className="h-5 w-5 mr-3 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-500">Views</p>
-                    <p className="font-semibold text-gray-900">{listing.views} times</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <TrendingDown className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">Deal Heat Score</p>
-                    <p className="font-semibold text-gray-900">{listing.dealHeatScore}</p>
+                    <p className="font-semibold">{views} times</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Hot Deal Alert */}
-            {listing.inventory.daysInStock > 90 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-yellow-900 mb-1">Hot Deal Alert!</h4>
-                    <p className="text-sm text-yellow-800">
-                      This vehicle has been in inventory for {listing.inventory.daysInStock} days. 
-                      The dealer is highly motivated to move it.
-                    </p>
-                  </div>
+            {/* Alert */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-yellow-800">
+                  <p className="font-semibold mb-1">Hot Deal Alert!</p>
+                  <p>This vehicle has been in inventory for {inventory.daysInStock} days. The dealer is highly motivated to move it.</p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -292,152 +244,90 @@ const DealDetails = () => {
       {/* Unlock Modal */}
       {showUnlockModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Choose Your Access Pass
-              </h2>
-              <p className="text-gray-600 mt-2">
-                Get time-based access to unlock any deal on the marketplace
+          <div className="bg-white rounded-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Access Pass</h3>
+            <p className="text-gray-600 mb-6">
+              Get time-based access to unlock any deal on the marketplace
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {/* 3-Day Pass */}
+              <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-primary-600 transition-colors">
+                <h4 className="font-bold text-gray-900 mb-1">3-Day Access</h4>
+                <div className="text-2xl font-bold text-gray-900 mb-2">$49.99</div>
+                <ul className="space-y-1 mb-4 text-sm text-gray-600">
+                  <li>✓ Unlock any deal</li>
+                  <li>✓ Full contact info</li>
+                  <li>✓ Complete VIN</li>
+                </ul>
+                <button 
+                  onClick={handleUnlock}
+                  className="w-full btn-primary text-sm"
+                >
+                  Get 3-Day Pass
+                </button>
+              </div>
+
+              {/* 7-Day Pass - Popular */}
+              <div className="border-2 border-primary-600 rounded-lg p-4 relative">
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-primary-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
+                    Popular
+                  </span>
+                </div>
+                <h4 className="font-bold text-gray-900 mb-1">7-Day Access</h4>
+                <div className="text-2xl font-bold text-gray-900 mb-2">$79.99</div>
+                <ul className="space-y-1 mb-4 text-sm text-gray-600">
+                  <li>✓ Unlock any deal</li>
+                  <li>✓ Full contact info</li>
+                  <li>✓ Complete VIN</li>
+                  <li>✓ Best value</li>
+                </ul>
+                <button 
+                  onClick={handleUnlock}
+                  className="w-full btn-primary text-sm"
+                >
+                  Get 7-Day Pass
+                </button>
+              </div>
+
+              {/* 14-Day Pass */}
+              <div className="border-2 border-gray-200 rounded-lg p-4 hover:border-primary-600 transition-colors">
+                <h4 className="font-bold text-gray-900 mb-1">14-Day Access</h4>
+                <div className="text-2xl font-bold text-gray-900 mb-2">$99.99</div>
+                <ul className="space-y-1 mb-4 text-sm text-gray-600">
+                  <li>✓ Unlock any deal</li>
+                  <li>✓ Full contact info</li>
+                  <li>✓ Complete VIN</li>
+                  <li>✓ Max flexibility</li>
+                </ul>
+                <button 
+                  onClick={handleUnlock}
+                  className="w-full btn-primary text-sm"
+                >
+                  Get 14-Day Pass
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-700 text-center">
+                <strong>How it works:</strong> Your pass unlocks all deals during your active window. 
+                No subscriptions, no per-deal charges.
               </p>
             </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* 3-Day Pass */}
-                <div className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      3-Day Access
-                    </h3>
-                    <div className="text-3xl font-bold text-gray-900">
-                      $49.99
-                    </div>
-                  </div>
-                  <ul className="space-y-2 mb-6 text-sm">
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Unlock any deal for 3 days
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Full dealer contact info
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Complete VIN access
-                    </li>
-                  </ul>
-                  <button
-                    onClick={() => handleUnlock('3-Day Access')}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                  >
-                    Get 3-Day Access
-                  </button>
-                </div>
-
-                {/* 7-Day Pass - Popular */}
-                <div className="border-2 border-blue-600 rounded-lg p-6 relative">
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      7-Day Access
-                    </h3>
-                    <div className="text-3xl font-bold text-gray-900">
-                      $79.99
-                    </div>
-                  </div>
-                  <ul className="space-y-2 mb-6 text-sm">
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Unlock any deal for 7 days
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Full dealer contact info
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Complete VIN access
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Best value
-                    </li>
-                  </ul>
-                  <button
-                    onClick={() => handleUnlock('7-Day Access')}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                  >
-                    Get 7-Day Access
-                  </button>
-                </div>
-
-                {/* 14-Day Pass */}
-                <div className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors">
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      14-Day Access
-                    </h3>
-                    <div className="text-3xl font-bold text-gray-900">
-                      $99.99
-                    </div>
-                  </div>
-                  <ul className="space-y-2 mb-6 text-sm">
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Unlock any deal for 14 days
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Full dealer contact info
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Complete VIN access
-                    </li>
-                    <li className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                      Maximum flexibility
-                    </li>
-                  </ul>
-                  <button
-                    onClick={() => handleUnlock('14-Day Access')}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                  >
-                    Get 14-Day Access
-                  </button>
-                </div>
-              </div>
-
-              {/* Small Print */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-gray-700 text-center">
-                  <strong>How it works:</strong> Your access pass unlocks all
-                  deals on the marketplace during your active window. No
-                  subscriptions, no per-deal charges. When your access expires,
-                  deal details are masked again.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={() => setShowUnlockModal(false)}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
+            <button 
+              onClick={() => setShowUnlockModal(false)}
+              className="w-full btn-secondary"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default DealDetails;
+export default DealDetails
