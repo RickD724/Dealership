@@ -9,7 +9,9 @@ import {
   Unlock,
   ArrowLeft,
   CheckCircle,
-  Heart
+  Phone,
+  Mail,
+  AlertCircle
 } from 'lucide-react';
 
 const DealDetails = () => {
@@ -17,7 +19,6 @@ const DealDetails = () => {
   const { getListingById, unlockListing, isListingUnlocked } = useApp();
   const listing = getListingById(id);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
 
   if (!listing) {
     return (
@@ -42,11 +43,6 @@ const DealDetails = () => {
     alert(`${plan} purchased! You now have access to unlock all deals.`);
   };
 
-  const handleFavoriteClick = () => {
-    setIsFavorited(!isFavorited);
-    console.log('Favorited:', listing.id);
-  };
-
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,46 +55,59 @@ const DealDetails = () => {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+          {/* Main Content - Left Side */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Images */}
+            {/* Image */}
             <div className="card overflow-hidden">
-              <div className="relative bg-gradient-to-br from-gray-300 to-gray-400 h-96 flex items-center justify-center">
-                {/* Favorite Button */}
-                <button
-                  onClick={handleFavoriteClick}
-                  className={`absolute top-4 right-4 p-3 rounded-full transition-all z-10 ${
-                    isFavorited
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Heart
-                    className={`h-6 w-6 ${isFavorited ? 'fill-current' : ''}`}
-                  />
-                </button>
+              <div className="relative">
+                <div className="bg-gradient-to-br from-gray-300 to-gray-400 h-96 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-6xl font-bold text-gray-500">
+                      {listing.vehicle.make}
+                    </div>
+                    <div className="text-3xl text-gray-600">
+                      {listing.vehicle.model}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Condition Badge */}
+                <div className="absolute top-4 left-4">
+                  <span className="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-900 uppercase">
+                    {listing.vehicle.condition}
+                  </span>
+                </div>
 
-                <div className="text-center">
-                  <div className="text-6xl font-bold text-gray-500">
-                    {listing.vehicle.make}
-                  </div>
-                  <div className="text-3xl text-gray-600">
-                    {listing.vehicle.model}
-                  </div>
+                {/* Deal Heat Badge */}
+                <div className="absolute top-4 right-4">
+                  <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-semibold flex items-center">
+                    🔥 {listing.dealHeatScore}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle Details */}
+            {/* Title & Subtitle */}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {listing.vehicle.year} {listing.vehicle.make} {listing.vehicle.model}
+              </h1>
+              <p className="text-xl text-gray-600">{listing.vehicle.trim}</p>
+            </div>
+
+            {/* Vehicle Details Grid */}
             <div className="card">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Vehicle Details
-              </h2>
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Year</p>
+                  <p className="text-sm text-gray-500 mb-1">Exterior</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.year}
+                    {listing.vehicle.exteriorColor}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Interior</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {listing.vehicle.interiorColor}
                   </p>
                 </div>
                 <div>
@@ -108,153 +117,174 @@ const DealDetails = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Exterior Color</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.exteriorColor}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Interior Color</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {listing.vehicle.interiorColor}
-                  </p>
-                </div>
-                <div>
                   <p className="text-sm text-gray-500 mb-1">Body Style</p>
                   <p className="text-lg font-semibold text-gray-900">
                     {listing.vehicle.bodyStyle}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Key Features */}
+            {listing.features && listing.features.length > 0 && (
+              <div className="card">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Key Features
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {listing.features.map((feature, index) => (
+                    <div key={index} className="flex items-center text-gray-700">
+                      <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Vehicle Identification */}
+            <div className="card">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Vehicle Identification
+              </h2>
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Condition</p>
-                  <p className="text-lg font-semibold text-gray-900 capitalize">
-                    {listing.vehicle.condition}
+                  <p className="text-sm text-gray-500 mb-1">Stock Number</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {listing.inventory.stockNumber}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">VIN</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {listing.vehicle.vin}
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* Features */}
-            {listing.features && listing.features.length > 0 && (
-              <div className="card">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Features
-                </h2>
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {listing.features.map((feature, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center text-gray-700"
-                    >
-                      <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
-          {/* Sidebar */}
+          {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Pricing Card */}
             <div className="card">
-              <div className="text-center mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {listing.vehicle.year} {listing.vehicle.make}{' '}
-                  {listing.vehicle.model}
-                </h1>
-                <p className="text-xl text-gray-600">{listing.vehicle.trim}</p>
+              <div className="text-right mb-4">
+                <p className="text-sm text-gray-500 line-through mb-1">
+                  ${listing.pricing.msrp.toLocaleString()}
+                </p>
+                <p className="text-4xl font-bold text-gray-900 mb-2">
+                  ${listing.pricing.sellingPrice.toLocaleString()}
+                </p>
+                <p className="text-lg text-green-600 font-semibold flex items-center justify-end">
+                  <TrendingDown className="h-5 w-5 mr-1" />
+                  Save ${listing.pricing.discount.toLocaleString()} ({listing.pricing.discountPercent.toFixed(1)}%)
+                </p>
               </div>
 
-              <div className="border-t border-b border-gray-200 py-6 mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-600">MSRP:</span>
-                  <span className="text-gray-900 line-through text-lg">
-                    ${listing.pricing.msrp.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-600">Your Price:</span>
-                  <span className="text-3xl font-bold text-gray-900">
-                    ${listing.pricing.sellingPrice.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">You Save:</span>
-                  <span className="text-xl font-semibold text-green-600">
-                    ${listing.pricing.discount.toLocaleString()} (
-                    {listing.pricing.discountPercent.toFixed(1)}%)
-                  </span>
-                </div>
-              </div>
-
-              {/* Unlock Button */}
+              {/* Unlocked State */}
               {isUnlocked ? (
-                <div className="bg-green-50 border-2 border-green-600 rounded-lg p-6 mb-4">
-                  <div className="flex items-center justify-center text-green-600 mb-4">
-                    <CheckCircle className="h-6 w-6 mr-2" />
-                    <span className="font-semibold">Deal Unlocked!</span>
+                <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                  <div className="flex items-center text-green-700 font-semibold mb-3">
+                    <Unlock className="h-5 w-5 mr-2" />
+                    Dealer Contact Unlocked
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-gray-700">
-                      <span className="font-medium">VIN:</span>{' '}
-                      {listing.vehicle.vin}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Dealer:</span>{' '}
-                      {listing.dealerName}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Phone:</span>{' '}
-                      <a
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Dealership</p>
+                      <p className="font-semibold text-gray-900">{listing.dealerName}</p>
+                    </div>
+                    
+                    <div className="flex items-center text-gray-900">
+                      <Phone className="h-4 w-4 mr-2 text-gray-600" />
+                      <a 
                         href={`tel:${listing.dealerPhone}`}
                         className="text-blue-600 hover:text-blue-700"
                       >
                         {listing.dealerPhone}
                       </a>
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Email:</span>{' '}
-                      <a
+                    </div>
+                    
+                    <div className="flex items-center text-gray-900">
+                      <Mail className="h-4 w-4 mr-2 text-gray-600" />
+                      <a 
                         href={`mailto:${listing.dealerEmail}`}
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-blue-600 hover:text-blue-700 break-all"
                       >
                         {listing.dealerEmail}
                       </a>
-                    </p>
+                    </div>
                   </div>
+
+                  <button className="w-full mt-4 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    Contact Dealer
+                  </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowUnlockModal(true)}
-                  className="w-full btn-primary flex items-center justify-center py-4 text-lg"
+                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center"
                 >
                   <Unlock className="h-5 w-5 mr-2" />
                   Unlock This Deal
                 </button>
               )}
+            </div>
 
-              {/* Meta Info */}
-              <div className="space-y-3 mt-6">
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  <span>{listing.dealerLocation}</span>
+            {/* Deal Stats */}
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Deal Stats</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <MapPin className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">Location</p>
+                    <p className="font-semibold text-gray-900">{listing.dealerLocation}</p>
+                  </div>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <Clock className="h-5 w-5 mr-2" />
-                  <span>{listing.inventory.daysInStock} days in stock</span>
+
+                <div className="flex items-start">
+                  <Clock className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">Days in Stock</p>
+                    <p className="font-semibold text-gray-900">{listing.inventory.daysInStock} days</p>
+                  </div>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <Eye className="h-5 w-5 mr-2" />
-                  <span>{listing.views} views</span>
+
+                <div className="flex items-start">
+                  <Eye className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">Views</p>
+                    <p className="font-semibold text-gray-900">{listing.views} times</p>
+                  </div>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <TrendingDown className="h-5 w-5 mr-2" />
-                  <span>Deal Heat Score: {listing.dealHeatScore}</span>
+
+                <div className="flex items-start">
+                  <TrendingDown className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">Deal Heat Score</p>
+                    <p className="font-semibold text-gray-900">{listing.dealHeatScore}</p>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Hot Deal Alert */}
+            {listing.inventory.daysInStock > 90 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-yellow-900 mb-1">Hot Deal Alert!</h4>
+                    <p className="text-sm text-yellow-800">
+                      This vehicle has been in inventory for {listing.inventory.daysInStock} days. 
+                      The dealer is highly motivated to move it.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
